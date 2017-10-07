@@ -72,22 +72,20 @@ def bot():
     deserialized_map = deserialize_map(serialized_map)
 
     otherPlayers = []
-    '''
-    for player_dict in map_json["OtherPlayers"]:
-        for player_name in player_dict.keys():
-            player_info = player_dict[player_name]
-            p_pos = player_info["Position"]
-            player_info = PlayerInfo(player_info["Health"],
-                                     player_info["MaxHealth"],
-                                     Point(p_pos["X"], p_pos["Y"]))
-            otherPlayers.append({player_name: player_info })
-            '''
+    for players in map_json["OtherPlayers"]:
+        player_info = players["Value"]
+        p_pos = player_info["Position"]
+        player_info = PlayerInfo(player_info["Health"],
+                                player_info["MaxHealth"],
+                                Point(p_pos["X"], p_pos["Y"]))
+        otherPlayers.append(player_info)
+
     # Printing the map
     for line in deserialized_map:
         out = ""
         for tile in line:
             if tile.Content == TileContent.Empty:
-                out += ("E")
+                out += (" ")
             elif tile.Content == TileContent.Wall:
                 out += ("M")
             elif tile.Content == TileContent.House:
@@ -100,51 +98,64 @@ def bot():
                 out += ("S")
             elif tile.Content == TileContent.Player:
                 out += ("P")
-        #print(out)
-
+        print(out)
+    print(player.CarriedRessources)
     if player.CarriedRessources >= player.CarryingCapacity:
         # On revient a la maison
         return goTo(deserialized_map, player.Position, player.HouseLocation)
     else:
         # On cherche les ressources
         resList = []
-        for i in range(len(deserialized_map)):
-            for j in range(len(deserialized_map[i])):
+        for j in range(len(deserialized_map)):
+            for i in range(len(deserialized_map[j])):
                 if deserialized_map[i][j].Content == TileContent.Resource:
-                    resList.append(Point(j, i))
+                    resList.append(Point(i, j))
         # On trouve la plus proche
         objectif = resList[0]
         for res in resList:
-            if res.Distance(res, Point(10, 10)) < objectif.Distance(res, Point(10, 10)):
+            if res.Distance(res, Point(10, 10)) < objectif.Distance(objectif, Point(10, 10)):
                 objectif = res
         # On decide si on collecte ou on y va
         if estACote(Point(10, 10), objectif):
-            create_collect_action(objectif)
+            inverse = Point((player.Position.X - 10 + objectif.X), (player.Position.Y - 10 + objectif.Y))
+            return create_collect_action(inverse)
         else:
-            return goTo(deserialized_map, player.Position, objectif)
+            return goTo(deserialized_map, player.Position, (player.Position - Point(10, 10) + objectif))
 
     # Simple decision making
     # On tue les ennemis faible
     for enemy in otherPlayers:
         if estACote(player.Position, ennemy.Position):
-            return create_attack_action(ennemy)
+            return create_attack_action(ennemy.Position)
 
     # return decision
     return create_move_action(player.Position - Point(1, 0))
 
 def goTo(dmap, src, dest):
-    if 10 > dest.Y and dmap[9][10].Content == TileContent.Empty:
+    print("{}:{} -> {}:{}".format(src.X, src.Y, dest.X, dest.Y))
+    if dest.X < src.X and dmap[9][10].Content in (TileContent.Empty, TileContent.House):
+        print("Gauche")
         return create_move_action(src - Point(1, 0))
-    elif 10 < dest.Y and dmap[11][10].Content == TileContent.Empty:
+    elif dest.X > src.X and dmap[11][10].Content in (TileContent.Empty, TileContent.House):
+        print("Droite")
         return create_move_action(src + Point(1, 0))
-    elif 10 > dest.X and dmap[10][9].Content == TileContent.Empty:
+    elif dest.Y < src.Y and dmap[10][9].Content in (TileContent.Empty, TileContent.House):
+        print("Bas")
         return create_move_action(src - Point(0, 1))
-    elif 10 < dest.X and dmap[10][11].Content == TileContent.Empty:
+    elif dest.Y > src.Y and dmap[10][11].Content in (TileContent.Empty, TileContent.House):
+        print("Haut")
         return create_move_action(src + Point(0, 1))
+    else:
+        print("Default")
+        return create_move_action(src - Point(0, 0))
 
 def estACote(posPlayer, point):
-    if (posPlayer.X - point.X == 1 or posPlayer.X - point.X == -1) and (posPlayer.Y - point.Y == 1 or posPlayer.Y - point.Y == -1):
-        return True
+    if posPlayer.X == point.X:
+        if posPlayer.Y - point.Y == 1 or posPlayer.Y - point.Y == -1:
+            return True
+    if posPlayer.Y == point.Y:
+        if posPlayer.X - point.X == 1 or posPlayer.X - point.X == -1:
+            return True
     return False
 
 def calculateDamage(attacker, defender):
@@ -155,7 +166,9 @@ def reponse():
     """
     Point d'entree appelle par le GameServer
     """
-    return bot()
+    rep = bot()
+    print(rep)
+    return rep
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000)
