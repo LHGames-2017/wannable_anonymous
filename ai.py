@@ -72,7 +72,7 @@ def bot():
     deserialized_map = deserialize_map(serialized_map)
 
     otherPlayers = []
-    '''
+    
     for player_dict in map_json["OtherPlayers"]:
         for player_name in player_dict.keys():
             player_info = player_dict[player_name]
@@ -81,7 +81,7 @@ def bot():
                                      player_info["MaxHealth"],
                                      Point(p_pos["X"], p_pos["Y"]))
             otherPlayers.append({player_name: player_info })
-            '''
+            
     # Printing the map
     for line in deserialized_map:
         out = ""
