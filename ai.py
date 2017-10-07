@@ -136,9 +136,9 @@ def goTo(dmap, src, dest):
     elif src.x < dest.x and dmap[src.x][src.y].Content == TileContent.Empty:
         return create_move_action(player.Position + Point(1, 0))
     elif src.y > dest.y and dmap[src.x][src.y].Content == TileContent.Empty:
-        return create_move_action(player.Position - Point(1, 0))
+        return create_move_action(player.Position - Point(0, 1))
     elif src.y < dest.y and dmap[src.x][src.y].Content == TileContent.Empty:
-        return create_move_action(player.Position + Point(1, 0))
+        return create_move_action(player.Position + Point(0, 1))
 
 def estACote(posPlayer, point):
     if (posPlayer.x - point.x == 1 or posPlayer.x - point.x == -1) and (posPlayer.y - point.y == 1 or posPlayer.y - point.y == -1):
@@ -156,4 +156,4 @@ def reponse():
     return bot()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=3000)
