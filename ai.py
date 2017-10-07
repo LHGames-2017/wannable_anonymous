@@ -131,7 +131,7 @@ def bot():
             return create_attack_action(ennemy)
 
     # return decision
-    return create_move_action(player.Position - Point(0, 0))
+    return create_move_action(player.Position - Point(1, 0))
 
 def goTo(dmap, src, dest):
     if 10 > dest.Y and dmap[9][10].Content == TileContent.Empty:
