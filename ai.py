@@ -72,7 +72,7 @@ def bot():
     deserialized_map = deserialize_map(serialized_map)
 
     otherPlayers = []
-    
+    '''
     for player_dict in map_json["OtherPlayers"]:
         for player_name in player_dict.keys():
             player_info = player_dict[player_name]
@@ -81,7 +81,7 @@ def bot():
                                      player_info["MaxHealth"],
                                      Point(p_pos["X"], p_pos["Y"]))
             otherPlayers.append({player_name: player_info })
-            
+            '''
     # Printing the map
     for line in deserialized_map:
         out = ""
@@ -100,7 +100,7 @@ def bot():
                 out += ("S")
             elif tile.Content == TileContent.Player:
                 out += ("P")
-        print(out)
+        #print(out)
 
     if player.CarriedRessources >= player.CarryingCapacity:
         # On revient a la maison
@@ -113,7 +113,6 @@ def bot():
                 if deserialized_map[i][j].Content == TileContent.Resource:
                     resList.append(Point(j, i))
         # On trouve la plus proche
-        print(resList)
         objectif = resList[0]
         for res in resList:
             if res.Distance(res, Point(10, 10)) < objectif.Distance(res, Point(10, 10)):
