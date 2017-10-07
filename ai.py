@@ -34,7 +34,7 @@ def deserialize_map(serialized_map):
     serialized_map = serialized_map[1:]
     rows = serialized_map.split('[')
     column = rows[0].split('{')
-    deserialized_map = [[Tile() for x in range(40)] for y in range(40)]
+    deserialized_map = [[Tile() for x in range(20)] for y in range(20)]
     for i in range(len(rows) - 1):
         column = rows[i + 1].split('{')
 
@@ -64,7 +64,7 @@ def bot():
     y = pos["Y"]
     house = p["HouseLocation"]
     player = Player(p["Health"], p["MaxHealth"], Point(x,y),
-                    Point(house["X"], house["Y"]),
+                    Point(house["X"], house["Y"]), p["Score"],
                     p["CarriedResources"], p["CarryingCapacity"])
 
     # Map
@@ -72,7 +72,6 @@ def bot():
     deserialized_map = deserialize_map(serialized_map)
 
     otherPlayers = []
-
     for player_dict in map_json["OtherPlayers"]:
         for player_name in player_dict.keys():
             player_info = player_dict[player_name]
@@ -82,9 +81,72 @@ def bot():
                                      Point(p_pos["X"], p_pos["Y"]))
 
             otherPlayers.append({player_name: player_info })
+    # Printing the map
+    for line in deserialized_map:
+        out = ""
+        for tile in line:
+            if tile.Content == TileContent.Empty:
+                out += ("E")
+            elif tile.Content == TileContent.Wall:
+                out += ("M")
+            elif tile.Content == TileContent.House:
+                out += ("H")
+            elif tile.Content == TileContent.Lava:
+                out += ("L")
+            elif tile.Content == TileContent.Resource:
+                out += ("R")
+            elif tile.Content == TileContent.Shop:
+                out += ("S")
+            elif tile.Content == TileContent.Player:
+                out += ("P")
+        print(out)
+
+    if player.CarriedRessources >= player.carryingCapacity:
+        # On revient a la maison
+        goTo(deserialized_map, player.Position, player.HouseLocation)
+    else:
+        # On cherche les ressources
+        resList = []
+        for i in range(len(deserialized_map)):
+            for j in range(len(deserialized_map[i])):
+                if deserialized_map[i][j].Content == TileContent.Resource:
+                    resList.append(Point(j, i))
+        # On trouve la plus proche
+        objectif = resList[0]
+        for res in resList:
+            if res.Distance(player.Position) < objectif.Distance(player.Position):
+                objectif = res
+        if estACote(player.Position, objectif):
+            create_collect_action(objectif)
+        else:
+            goTo(deserialized_map, player.Position, objectif)
+
+    # Simple decision making
+    # On tue les ennemis faible
+    for enemy in otherPlayers:
+        if estACote(player.Position, ennemy.Position):
+            return create_attack_action(ennemy)
 
     # return decision
-    return create_move_action(Point(0,1))
+    return create_move_action(player.Position - Point(0, 1))
+
+def goTo(dmap, src, dest):
+    if src.x > dest.x and dmap[src.x][src.y].Content == TileContent.Empty:
+        return create_move_action(player.Position - Point(1, 0))
+    elif src.x < dest.x and dmap[src.x][src.y].Content == TileContent.Empty:
+        return create_move_action(player.Position + Point(1, 0))
+    elif src.y > dest.y and dmap[src.x][src.y].Content == TileContent.Empty:
+        return create_move_action(player.Position - Point(1, 0))
+    elif src.y < dest.y and dmap[src.x][src.y].Content == TileContent.Empty:
+        return create_move_action(player.Position + Point(1, 0))
+
+def estACote(posPlayer, point):
+    if (posPlayer.x - point.x == 1 or posPlayer.x - point.x == -1) and (posPlayer.y - point.y == 1 or posPlayer.y - point.y == -1):
+        return True
+    return False
+
+def calculateDamage(attacker, defender):
+    pass
 
 @app.route("/", methods=["POST"])
 def reponse():
@@ -94,4 +156,4 @@ def reponse():
     return bot()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000)
+    app.run(host="0.0.0.0", port=8080)
