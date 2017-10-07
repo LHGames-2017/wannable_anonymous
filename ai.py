@@ -34,7 +34,7 @@ def deserialize_map(serialized_map):
     serialized_map = serialized_map[1:]
     rows = serialized_map.split('[')
     column = rows[0].split('{')
-    deserialized_map = [[Tile() for x in range(20)] for y in range(20)]
+    deserialized_map = [[Tile() for x in range(30)] for y in range(30)]
     for i in range(len(rows) - 1):
         column = rows[i + 1].split('{')
 
@@ -72,6 +72,7 @@ def bot():
     deserialized_map = deserialize_map(serialized_map)
 
     otherPlayers = []
+    '''
     for player_dict in map_json["OtherPlayers"]:
         for player_name in player_dict.keys():
             player_info = player_dict[player_name]
@@ -79,14 +80,14 @@ def bot():
             player_info = PlayerInfo(player_info["Health"],
                                      player_info["MaxHealth"],
                                      Point(p_pos["X"], p_pos["Y"]))
-
             otherPlayers.append({player_name: player_info })
+            '''
     # Printing the map
     for line in deserialized_map:
         out = ""
         for tile in line:
             if tile.Content == TileContent.Empty:
-                out += ("E")
+                out += (" ")
             elif tile.Content == TileContent.Wall:
                 out += ("M")
             elif tile.Content == TileContent.House:
@@ -101,7 +102,7 @@ def bot():
                 out += ("P")
         print(out)
 
-    if player.CarriedRessources >= player.carryingCapacity:
+    if player.CarriedRessources >= player.CarryingCapacity:
         # On revient a la maison
         goTo(deserialized_map, player.Position, player.HouseLocation)
     else:
@@ -114,8 +115,9 @@ def bot():
         # On trouve la plus proche
         objectif = resList[0]
         for res in resList:
-            if res.Distance(player.Position) < objectif.Distance(player.Position):
+            if res.Distance(res, player.Position) < objectif.Distance(res, player.Position):
                 objectif = res
+        # On decide
         if estACote(player.Position, objectif):
             create_collect_action(objectif)
         else:
@@ -128,20 +130,20 @@ def bot():
             return create_attack_action(ennemy)
 
     # return decision
-    return create_move_action(player.Position - Point(0, 1))
+    return create_move_action(player.Position - Point(0, 0))
 
 def goTo(dmap, src, dest):
-    if src.x > dest.x and dmap[src.x][src.y].Content == TileContent.Empty:
+    if src.X > dest.X and dmap[src.Y][src.X-1].Content == TileContent.Empty:
         return create_move_action(player.Position - Point(1, 0))
-    elif src.x < dest.x and dmap[src.x][src.y].Content == TileContent.Empty:
+    elif src.X < dest.X and dmap[src.Y][src.X+1].Content == TileContent.Empty:
         return create_move_action(player.Position + Point(1, 0))
-    elif src.y > dest.y and dmap[src.x][src.y].Content == TileContent.Empty:
+    elif src.Y > dest.Y and dmap[src.Y-1][src.X].Content == TileContent.Empty:
         return create_move_action(player.Position - Point(0, 1))
-    elif src.y < dest.y and dmap[src.x][src.y].Content == TileContent.Empty:
+    elif src.Y < dest.Y and dmap[src.Y+1][src.X].Content == TileContent.Empty:
         return create_move_action(player.Position + Point(0, 1))
 
 def estACote(posPlayer, point):
-    if (posPlayer.x - point.x == 1 or posPlayer.x - point.x == -1) and (posPlayer.y - point.y == 1 or posPlayer.y - point.y == -1):
+    if (posPlayer.X - point.X == 1 or posPlayer.X - point.X == -1) and (posPlayer.Y - point.Y == 1 or posPlayer.Y - point.Y == -1):
         return True
     return False
 
